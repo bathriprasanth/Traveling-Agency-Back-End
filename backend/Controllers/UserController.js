@@ -41,28 +41,48 @@ const LoginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Find user by email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: "Email not found." });
         }
 
-        // Check password
         if (user.password !== password) {
             return res.status(401).json({ message: "Invalid password." });
         }
 
-        // Return user data to frontend for session
+        // Return role so frontend can route admin vs user correctly
         res.status(200).json({
             message: "Login Successful",
             data: {
                 name: user.name,
                 email: user.email,
+                role: user.role,
                 isLoggedIn: true
             }
         });
     } catch (error) {
         res.status(500).json({ message: "Login failed", error: error.message });
+    }
+};
+
+// GET /api/user/seed-admin — Create admin account if it does not exist
+const SeedAdmin = async (req, res) => {
+    try {
+        const existing = await User.findOne({ email: 'admin@aspire.com' });
+        if (existing) {
+            return res.status(200).json({ message: 'Admin already exists.', data: { email: existing.email, role: existing.role } });
+        }
+        const admin = new User({
+            name: 'Admin',
+            email: 'admin@aspire.com',
+            phone: '0000000000',
+            password: 'Admin123',
+            role: 'admin'
+        });
+        await admin.save();
+        res.status(201).json({ message: 'Admin account created successfully.', data: { email: admin.email, role: admin.role } });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to seed admin.', error: error.message });
     }
 };
 
@@ -124,4 +144,4 @@ const GetAllUsers = async (req, res) => {
     }
 };
 
-module.exports = { SignupUser, LoginUser, ForgotPassword, UpdateProfile, GetProfile, GetAllUsers };
+module.exports = { SignupUser, LoginUser, ForgotPassword, UpdateProfile, GetProfile, GetAllUsers, SeedAdmin };

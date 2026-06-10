@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { SignupUser, LoginUser, ForgotPassword, UpdateProfile, GetProfile, GetAllUsers } = require("../Controllers/UserController");
+const { SignupUser, LoginUser, ForgotPassword, UpdateProfile, GetProfile, GetAllUsers, SeedAdmin } = require("../Controllers/UserController");
 
 // POST /api/user/signup
 router.post("/signup", SignupUser);
@@ -20,5 +20,8 @@ router.get("/profile/:email", GetProfile);
 
 // GET /api/user/all
 router.get("/all", GetAllUsers);
+
+// GET /api/user/seed-admin — creates admin account if missing
+router.get("/seed-admin", SeedAdmin);
 
 module.exports = router;
