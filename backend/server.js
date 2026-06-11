@@ -23,7 +23,6 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
-app.options("*", cors()); // handle preflight for all routes
 app.use(express.json());
 
 // Auto-seed admin account on server start if it does not exist
