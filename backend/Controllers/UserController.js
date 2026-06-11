@@ -3,36 +3,43 @@ const User = require("../Models/UserModel");
 // SIGNUP — Save new user to MongoDB
 const SignupUser = async (req, res) => {
     try {
-        console.log('--- SIGNUP REQUEST ---');
-        console.log('Body:', JSON.stringify(req.body, null, 2));
-
         const { name, email, phone, password } = req.body;
 
-        // Check all required fields
         if (!name || !email || !phone || !password) {
-            const missing = ['name','email','phone','password'].filter(f => !req.body[f]);
-            console.log('Missing fields:', missing);
+            const missing = ['name', 'email', 'phone', 'password'].filter(f => !req.body[f]);
             return res.status(400).json({ message: `Missing fields: ${missing.join(', ')}` });
         }
 
-        // Check if email already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ message: "Email already registered." });
         }
 
-        const newUser = new User({ name, email, phone, password });
+        const newUser = new User({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            password
+        });
+
         const savedUser = await newUser.save();
 
-        console.log('User saved:', savedUser._id);
-        res.status(200).json({
+        return res.status(201).json({
             message: "User Registered Successfully",
-            data: savedUser
+            data: {
+                name: savedUser.name,
+                email: savedUser.email,
+                phone: savedUser.phone,
+                role: savedUser.role
+            }
         });
     } catch (error) {
-        console.error('--- SIGNUP ERROR ---');
-        console.error(error.message);
-        res.status(500).json({ message: error.message });
+        console.error('[SignupUser Error]', error.message);
+        // Handle MongoDB duplicate key race condition
+        if (error.code === 11000) {
+            return res.status(400).json({ message: "Email already registered." });
+        }
+        return res.status(500).json({ message: "Registration failed. Please try again.", error: error.message });
     }
 };
 

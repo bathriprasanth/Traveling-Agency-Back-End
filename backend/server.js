@@ -5,8 +5,25 @@ require("dotenv").config();
 
 const app = express();
 
-// Allow requests from Netlify frontend
-app.use(cors({ origin: "https://radiant-fudge-d2f652.netlify.app" }));
+// CORS — allow Netlify frontend and local dev, handle preflight OPTIONS
+const allowedOrigins = [
+    "https://radiant-fudge-d2f652.netlify.app",
+    "http://localhost:3000"
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        // allow requests with no origin (Postman, Render health checks)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("CORS: origin not allowed — " + origin));
+        }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+}));
+app.options("*", cors()); // handle preflight for all routes
 app.use(express.json());
 
 // Auto-seed admin account on server start if it does not exist

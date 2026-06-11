@@ -3,12 +3,8 @@ const Booking = require("../Models/BookingModel");
 // POST /api/booking — Save new booking
 const createBooking = async (req, res) => {
     try {
-        console.log('--- BOOKING REQUEST RECEIVED ---');
-        console.log('Body:', JSON.stringify(req.body, null, 2));
-
         const { name, email, phone, packageName, destination, persons, travelDate, paymentMethod, specialRequest } = req.body;
 
-        // Check each required field manually and report which is missing
         const missing = [];
         if (!name)          missing.push('name');
         if (!email)         missing.push('email');
@@ -20,7 +16,6 @@ const createBooking = async (req, res) => {
         if (!paymentMethod) missing.push('paymentMethod');
 
         if (missing.length > 0) {
-            console.log('Missing fields:', missing);
             return res.status(400).json({
                 success: false,
                 message: `Missing required fields: ${missing.join(', ')}`
@@ -28,28 +23,16 @@ const createBooking = async (req, res) => {
         }
 
         const booking = new Booking({
-            name,
-            email,
-            phone,
-            packageName,
-            destination,
-            persons:        Number(persons),
-            travelDate,
-            paymentMethod,
+            name, email, phone, packageName, destination,
+            persons: Number(persons),
+            travelDate, paymentMethod,
             specialRequest: specialRequest || ''
         });
 
         const saved = await booking.save();
-        console.log('Booking saved successfully. ID:', saved._id);
         res.status(201).json({ message: "Booking confirmed successfully.", data: saved });
 
     } catch (error) {
-        console.error('--- BOOKING SAVE ERROR ---');
-        console.error('Name:', error.name);
-        console.error('Message:', error.message);
-        if (error.errors) {
-            console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
-        }
         res.status(500).json({
             success: false,
             message: error.message,
