@@ -5,13 +5,9 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS — allow Netlify frontend and local dev
-app.use(cors({
-    origin: ["https://radiant-fudge-d2f652.netlify.app", "http://localhost:3000"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
-}));
+// CORS — accept all origins (works with any Netlify URL and local dev)
+app.use(cors());
+app.options('*', cors());
 app.use(express.json());
 
 // Always force-set admin password and role on every server start
