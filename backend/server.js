@@ -5,52 +5,37 @@ require("dotenv").config();
 
 const app = express();
 
-// CORS — allow Netlify frontend and local dev, handle preflight OPTIONS
-const allowedOrigins = [
-    "https://radiant-fudge-d2f652.netlify.app",
-    "http://localhost:3000"
-];
+// CORS — allow Netlify frontend and local dev
 app.use(cors({
-    origin: (origin, callback) => {
-        // allow requests with no origin (Postman, Render health checks)
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("CORS: origin not allowed — " + origin));
-        }
-    },
+    origin: ["https://radiant-fudge-d2f652.netlify.app", "http://localhost:3000"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
 app.use(express.json());
 
-// Auto-seed admin account on server start if it does not exist
+// Always force-set admin password and role on every server start
 const User = require("./Models/UserModel");
 const seedAdmin = async () => {
     try {
-        const existing = await User.findOne({ email: 'admin@aspire.com' });
+        const existing = await User.findOne({ email: "admin@aspire.com" });
         if (!existing) {
             await User.create({
-                name: 'Admin',
-                email: 'admin@aspire.com',
-                phone: '0000000000',
-                password: 'Admin123',
-                role: 'admin'
+                name: "Admin",
+                email: "admin@aspire.com",
+                phone: "0000000000",
+                password: "Admin123",
+                role: "admin"
             });
-            console.log('Admin account created: admin@aspire.com');
+            console.log("Admin created: admin@aspire.com / Admin123");
         } else {
-            // Ensure existing record has role: admin
-            if (existing.role !== 'admin') {
-                existing.role = 'admin';
-                await existing.save();
-                console.log('Admin role updated for: admin@aspire.com');
-            } else {
-                console.log('Admin account already exists.');
-            }
+            existing.password = "Admin123";
+            existing.role = "admin";
+            await existing.save();
+            console.log("Admin verified: admin@aspire.com / Admin123");
         }
     } catch (err) {
-        console.error('Admin seed error:', err.message);
+        console.error("Admin seed error:", err.message);
     }
 };
 
@@ -59,10 +44,10 @@ mongoose
     .connect(process.env.MONGO_URL)
     .then(() => {
         console.log("MongoDB Connected Successfully");
-        seedAdmin(); // run after connection
+        seedAdmin();
     })
     .catch((error) => {
-        console.error("MongoDB Connection Failed:", error);
+        console.error("MongoDB Connection Failed:", error.message);
     });
 
 // Routes
@@ -78,7 +63,6 @@ app.use("/api/booking", BookingRouter);
 const ContactRouter = require("./Routers/ContactRouter");
 app.use("/api/contact", ContactRouter);
 
-// Use Render's dynamic PORT or fallback to 5000 locally
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
